@@ -194,14 +194,15 @@ Custom property            | Description                           | Default
 		 */
 		get target() {
 			var parentNode = Polymer.dom(this).parentNode;
-			// If the parentNode is a document fragment, then we need to use the host.
-			var ownerRoot = Polymer.dom(this).getOwnerRoot();
+			if (parentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE) {
+				// If the parentNode is a document fragment, then we need to use the host.
+				parentNode = Polymer.dom(this).getOwnerRoot();
+			}
 			var target;
 			if (this.for) {
-				target = Polymer.dom(ownerRoot).querySelector('#' + this.for);
+				target = Polymer.dom(parentNode).querySelector(this.for);
 			} else {
-				target = parentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE ?
-					ownerRoot.host : parentNode;
+				target = parentNode;
 			}
 			return target;
 		},
