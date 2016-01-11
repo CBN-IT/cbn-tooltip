@@ -1,0 +1,299 @@
+<!--
+`cbn-tooltip` is a tooltip element that displays a tooltip with fixed positioning, thus avoiding problems when used 
+inside modal dialogs / CSS-transformed elements.
+
+It will be centered to an anchor element specified in the `for` attribute, or, if that doesn't exist, centered to the 
+parent node containing it.
+
+Usage:
+```
+    <div>
+      <paper-button>Button</paper-button>
+      <cbn-tooltip position="left">Tooltip text</cbn-tooltip>
+    </div>
+```
+```
+    <div>
+      <paper-button id="btn">Button</paper-button>
+      <cbn-tooltip for="btn">Tooltip text</cbn-tooltip>
+    </div>
+```
+
+The tooltip is positioned using `Cbn.PositionBehavior`, which can automatically flip the element if it doesn't fit in 
+the viewport.
+
+```
+    <cbn-tooltip for="btn" position="left">Tooltip text</cbn-tooltip>
+    <cbn-tooltip for="btn" position="top right, top left" 
+                 position-collision="flipfit fit">Tooltip text</cbn-tooltip>
+```
+
+### Styling
+
+The following custom properties and mixins are available for styling:
+
+Custom property            | Description                           | Default
+---------------------------|---------------------------------------|----------
+`--cbn-tooltip-background` | The background color of the tooltip   | `#616161`
+`--cbn-tooltip-opacity`    | The opacity of the tooltip            | `0.9`
+`--cbn-tooltip-text-color` | The text color of the tooltip         | `white`
+`--cbn-tooltip`            | Mixin applied to the tooltip element  | `{}`
+
+@demo demo/index.html
+@class cbn-tooltip
+-->
+
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../neon-animation/neon-animation-runner-behavior.html">
+<link rel="import" href="../neon-animation/animations/fade-in-animation.html">
+<link rel="import" href="../neon-animation/animations/fade-out-animation.html">
+
+<link rel="import" href="../cbn-polymer-extensions/lib/position-behavior.html"/>
+
+<dom-module id="cbn-tooltip">
+	<template>
+		<style>
+			:host {
+				display: block;
+				position: fixed;
+				outline: none;
+				z-index: 1002;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				-webkit-user-select: none;
+				user-select: none;
+				cursor: default;
+			}
+			
+			#tooltip {
+				display: block;
+				outline: none;
+				@apply(--paper-font-common-base);
+				font-size: 0.8em;
+				line-height: 1;
+				background-color: var(--cbn-tooltip-background, rgba(4, 4, 4, 0.9));
+				opacity: var(--cbn-tooltip-opacity, 0.9);
+				color: var(--cbn-tooltip-text-color, white);
+				padding: 0.5em;
+				border-radius: 2px;
+				@apply(--cbn-tooltip);
+			}
+			
+			/* Thanks IE 10. */
+			.hidden {
+				display: none !important;
+			}
+		</style>
+		
+		<div id="tooltip" class="hidden">
+			<content></content>
+		</div>
+	</template>
+</dom-module>
+
+<script>
+	Polymer({
+		is: 'cbn-tooltip',
+		
+		properties: {
+			
+			/**
+			 * The id of the element that the tooltip is anchored to. This element
+			 * must be a sibling of the tooltip.
+			 */
+			for: {
+				type: String,
+				observer: '_forChanged'
+			},
+			
+			/**
+			 * Set this to true if you want to manually control when the tooltip
+			 * is shown or hidden.
+			 */
+			manualMode: {
+				type: Boolean,
+				value: false
+			},
+			
+			/**
+			 * The position of the tooltip (a PositionBehavior string).
+			 */
+			position: {
+				type: String,
+				value: 'left, right'
+			},
+			
+			/**
+			 * The collision mode of the tooltip.
+			 */
+			positionCollision: {
+				type: String,
+				value: 'flipfit flipfit'
+			},
+		
+			/**
+			 * The delay that will be applied before the `entry` animation is
+			 * played when showing the tooltip.
+			 */
+			animationDelay: {
+				type: Number,
+				value: 500
+			},
+			
+			/**
+			 * The entry and exit animations that will be played when showing and
+			 * hiding the tooltip. If you want to override this, you must ensure
+			 * that your animationConfig has the exact format below.
+			 */
+			animationConfig: {
+				type: Object,
+				value: function () {
+					return {
+						'entry': [{
+							name: 'fade-in-animation',
+							node: this,
+							timing: {delay: 0}
+						}],
+						'exit': [{
+							name: 'fade-out-animation',
+							node: this
+						}]
+					}
+				}
+			},
+			
+			/**
+			 * Whether the tooltip is currently visible (or is currently animating).
+			 */
+			_showing: {
+				type: Boolean,
+				value: false
+			}
+			
+		},
+		
+		hostAttributes: {
+			role: 'tooltip',
+			tabindex: -1
+		},
+		
+		behaviors: [
+			Polymer.NeonAnimationRunnerBehavior,
+			Cbn.PositionBehavior
+		],
+		
+		listeners: {
+			'neon-animation-finish': '_onAnimationFinish',
+			'mouseenter': 'hide'
+		},
+		
+		/**
+		 * Returns the target element that this tooltip is anchored to. It is
+		 * either the element given by the `for` attribute, or the immediate parent
+		 * of the tooltip.
+		 */
+		get target() {
+			var parentNode = Polymer.dom(this).parentNode;
+			// If the parentNode is a document fragment, then we need to use the host.
+			var ownerRoot = Polymer.dom(this).getOwnerRoot();
+			var target;
+			if (this.for) {
+				target = Polymer.dom(ownerRoot).querySelector('#' + this.for);
+			} else {
+				target = parentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE ?
+					ownerRoot.host : parentNode;
+			}
+			return target;
+		},
+		
+		attached: function () {
+			this._target = this.target;
+			if (this.manualMode)
+				return;
+			this.listen(this._target, 'mouseenter', 'show');
+			this.listen(this._target, 'focus', 'show');
+			this.listen(this._target, 'mouseleave', 'hide');
+			this.listen(this._target, 'blur', 'hide');
+			this.listen(this._target, 'tap', 'hide');
+		},
+		
+		detached: function () {
+			if (this._target && !this.manualMode) {
+				this.unlisten(this._target, 'mouseenter', 'show');
+				this.unlisten(this._target, 'focus', 'show');
+				this.unlisten(this._target, 'mouseleave', 'hide');
+				this.unlisten(this._target, 'blur', 'hide');
+				this.unlisten(this._target, 'tap', 'hide');
+			}
+		},
+		
+		/**
+		 * Shows the tooltip. Better used with manual mode.
+		 */
+		show: function () {
+			// If the tooltip is already showing, there's nothing to do.
+			if (this._showing)
+				return;
+			if (Polymer.dom(this).textContent.trim() === '')
+				return;
+			this.cancelAnimation();
+			this._showing = true;
+			this.toggleClass('hidden', false, this.$.tooltip);
+			this.updatePosition();
+			this.animationConfig.entry[0].timing.delay = this.animationDelay;
+			this._animationPlaying = true;
+			this.playAnimation('entry');
+		},
+		
+		/**
+		 * Hides the tooltip. Better used with manual mode.
+		 */
+		hide: function () {
+			// If the tooltip is already hidden, there's nothing to do.
+			if (!this._showing) {
+				return;
+			}
+			// If the entry animation is still playing, don't try to play the exit
+			// animation since this will reset the opacity to 1. Just end the animation.
+			if (this._animationPlaying) {
+				this.cancelAnimation();
+				this._showing = false;
+				this._onAnimationFinish();
+				return;
+			}
+			this._showing = false;
+			this._animationPlaying = true;
+			this.playAnimation('exit');
+		},
+		
+		/**
+		 * Called when the target element is changed.
+		 * 
+		 * Warning: only works if this attribute is changed before the tooltip is attached to the DOM.
+		 */
+		_forChanged: function () {
+			this._target = this.target;
+		},
+		
+		/**
+		 * Uses PositionBehavior to update the position of the tooltip.
+		 */
+		updatePosition: function () {
+			if (!this._target)
+				return;
+			
+			this.updateElementPosition(/**@type {Element}*/ this, this._target);
+		},
+		
+		/**
+		 * Animation end handler. Hides the tooltip's contents.
+		 */
+		_onAnimationFinish: function () {
+			this._animationPlaying = false;
+			if (!this._showing) {
+				this.toggleClass('hidden', true, this.$.tooltip);
+			}
+		}
+		
+	});
+</script>
