@@ -213,15 +213,12 @@ Custom property            | Description                           | Default
 			}
 			return target;
 		},
-		_insertAfter: function (newNode, referenceNode) {
-			referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
-		},
 		_preventAttach: false,
 		attached: function () {
 			if (!this._preventAttach) {
 				this._preventAttach = true;
 				this._target = this.target;
-				this._insertAfter(this, document.body.lastChild);
+				document.body.lastChild.appendChild(this);
 				return;
 			} else {
 				this._preventAttach = false;
