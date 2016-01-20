@@ -218,7 +218,7 @@ Custom property            | Description                           | Default
 			if (!this._preventAttach) {
 				this._preventAttach = true;
 				this._target = this.target;
-				document.body.lastChild.appendChild(this);
+				document.body.appendChild(this);
 				return;
 			} else {
 				this._preventAttach = false;
