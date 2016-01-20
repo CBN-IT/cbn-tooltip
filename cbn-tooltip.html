@@ -206,9 +206,19 @@ Custom property            | Description                           | Default
 			}
 			return target;
 		},
-		
+		_insertAfter: function (newNode, referenceNode) {
+			referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+		},
+		_preventAttach: false,
 		attached: function () {
-			this._target = this.target;
+			if (!this._preventAttach) {
+				this._preventAttach = true;
+				this._target = this.target;
+				this._insertAfter(this, document.body.lastChild);
+				return;
+			} else {
+				this._preventAttach = false;
+			}
 			if (this.manualMode)
 				return;
 			this.listen(this._target, 'mouseenter', 'show');
@@ -217,8 +227,11 @@ Custom property            | Description                           | Default
 			this.listen(this._target, 'blur', 'hide');
 			this.listen(this._target, 'tap', 'hide');
 		},
-		
+
 		detached: function () {
+			if (this._preventAttach) {
+				return;
+			}
 			if (this._target && !this.manualMode) {
 				this.unlisten(this._target, 'mouseenter', 'show');
 				this.unlisten(this._target, 'focus', 'show');
