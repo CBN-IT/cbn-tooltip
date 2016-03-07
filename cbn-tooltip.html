@@ -1,43 +1,5 @@
 <!--
-`cbn-tooltip` is a tooltip element that displays a tooltip with fixed positioning, thus avoiding problems when used 
-inside modal dialogs / CSS-transformed elements.
-
-It will be centered to an anchor element specified in the `for` attribute, or, if that doesn't exist, centered to the 
-parent node containing it.
-
-Usage:
-```
-    <div>
-      <paper-button>Button</paper-button>
-      <cbn-tooltip position="left">Tooltip text</cbn-tooltip>
-    </div>
-```
-```
-    <div>
-      <paper-button id="btn">Button</paper-button>
-      <cbn-tooltip for="btn">Tooltip text</cbn-tooltip>
-    </div>
-```
-
-The tooltip is positioned using `Cbn.PositionBehavior`, which can automatically flip the element if it doesn't fit in 
-the viewport.
-
-```
-    <cbn-tooltip for="btn" position="left">Tooltip text</cbn-tooltip>
-    <cbn-tooltip for="btn" position="top right, top left" 
-                 position-collision="flipfit fit">Tooltip text</cbn-tooltip>
-```
-
-### Styling
-
-The following custom properties and mixins are available for styling:
-
-Custom property            | Description                           | Default
----------------------------|---------------------------------------|----------
-`--cbn-tooltip-background` | The background color of the tooltip   | `#616161`
-`--cbn-tooltip-opacity`    | The opacity of the tooltip            | `0.9`
-`--cbn-tooltip-text-color` | The text color of the tooltip         | `white`
-`--cbn-tooltip`            | Mixin applied to the tooltip element  | `{}`
+`cbn-tooltip`
 
 @demo demo/index.html
 @class cbn-tooltip
