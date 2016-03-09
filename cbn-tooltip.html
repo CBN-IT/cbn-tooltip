@@ -187,6 +187,10 @@
 			}
 			if (this.manualMode)
 				return;
+			if (this._target == null) {
+				console.warn("cbn-tooltip: invalid target for attribute for: " + this.for);
+				return;
+			}
 			this.listen(this._target, 'mouseenter', 'show');
 			this.listen(this._target, 'focus', 'show');
 			this.listen(this._target, 'mouseleave', 'hide');
