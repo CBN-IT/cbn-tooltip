@@ -191,8 +191,8 @@
 				console.warn("cbn-tooltip: invalid target for attribute for: " + this.for);
 				return;
 			}
-			this.listen(this._target, 'mouseenter', 'show');
-			this.listen(this._target, 'focus', 'show');
+			this.listen(this._target, 'mouseenter', '_show');
+			this.listen(this._target, 'focus', '_show');
 			this.listen(this._target, 'mouseleave', 'hide');
 			this.listen(this._target, 'blur', 'hide');
 			this.listen(this._target, 'tap', 'hide');
@@ -203,8 +203,8 @@
 				return;
 			}
 			if (this._target && !this.manualMode) {
-				this.unlisten(this._target, 'mouseenter', 'show');
-				this.unlisten(this._target, 'focus', 'show');
+				this.unlisten(this._target, 'mouseenter', '_show');
+				this.unlisten(this._target, 'focus', '_show');
 				this.unlisten(this._target, 'mouseleave', 'hide');
 				this.unlisten(this._target, 'blur', 'hide');
 				this.unlisten(this._target, 'tap', 'hide');
@@ -213,8 +213,11 @@
 		
 		/**
 		 * Shows the tooltip. Better used with manual mode.
+		 * 
+		 * @param {Element} [target] The target element to show at.
 		 */
-		show: function () {
+		show: function (target) {
+			if (!target) target = this._target;
 			// If the tooltip is already showing, there's nothing to do.
 			if (this._showing)
 				return;
@@ -223,10 +226,18 @@
 			this.cancelAnimation();
 			this._showing = true;
 			this.toggleClass('hidden', false, this.$.tooltip);
-			this.updatePosition();
+			this.updatePosition(target);
 			this.animationConfig.entry[0].timing.delay = this.animationDelay;
 			this._animationPlaying = true;
 			this.playAnimation('entry');
+		},
+
+		/**
+		 * Shows the element on mouse over.
+		 */
+		_show: function() {
+			// call with default target
+			this.show();
 		},
 		
 		/**
@@ -261,12 +272,14 @@
 		
 		/**
 		 * Uses PositionBehavior to update the position of the tooltip.
+		 * 
+		 * @param {Element} [target] The target element to show at.
 		 */
-		updatePosition: function () {
-			if (!this._target)
+		updatePosition: function (target) {
+			if (!target) target = this._target;
+			if (!target)
 				return;
-			
-			this.updateElementPosition(/**@type {Element}*/ this, this._target);
+			this.updateElementPosition(/**@type {Element}*/ this, target);
 		},
 		
 		/**
